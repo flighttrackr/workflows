@@ -1,0 +1,134 @@
+name: Build and Release
+
+on:
+  workflow_call:
+    inputs:
+      hub_repo:
+        description: 'Container registry repository'
+        default: 'flighttrackr'
+        required: false
+        type: string
+      hub_image:
+        description: 'Container registry image name'
+        required: true
+        type: string
+      image_authors:
+        description: 'Docker image authors'
+        default: 'Dennis Neufeld <git@dneufeld.net>'
+        required: false
+        type: string
+      image_title:
+        description: 'Docker image title'
+        required: true
+        type: string
+      image_description:
+        description: 'Docker image description'
+        required: true
+        type: string
+      image_licenses:
+        description: 'Docker image licenses'
+        default: 'MIT'
+        required: false
+        type: string
+
+
+env:
+  HUB_REPO: ${{ inputs.hub_repo }}
+  HUB_IMAGE: ${{ inputs.hub_image }}
+  IMAGE_LABELS: |
+    org.opencontainers.image.authors=${{ inputs.image_authors }}
+    org.opencontainers.image.title=${{ inputs.image_title }}
+    org.opencontainers.image.description=${{ inputs.image_description }}
+    org.opencontainers.image.licenses=${{ inputs.image_licenses }}
+
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-20.04
+    env:
+      ARCHS: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386
+    outputs:
+      version: ${{ steps.settings.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Set release settings
+        id: settings
+        run: >
+          if [[ $GITHUB_REF == refs/tags/v* ]];
+          then
+            echo "::set-output name=version::${GITHUB_REF#refs/tags/v}"
+            echo "::set-output name=tags::type=semver,pattern={{raw}}"
+          else
+            echo "::set-output name=version::${GITHUB_REF#refs/heads/}"
+            echo "::set-output name=tags::type=edge"
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.2.0
+        with:
+          platforms: ${{ env.ARCHS }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+
+      - name: Set up Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3.6.0
+        with:
+          images: ghcr.io/${{ env.HUB_REPO }}/${{ env.HUB_IMAGE }}
+          flavor: latest=auto
+          tags: ${{ steps.settings.outputs.tags }}
+          labels: ${{ env.IMAGE_LABELS }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1.10.0
+        with:
+          registry: ghcr.io
+          username: ${{ env.HUB_REPO }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2.7.0
+        with:
+          platforms: ${{ env.ARCHS }}
+          pull: true
+          push: true
+          cache-from: type=gha,scope=main
+          cache-to: type=gha,scope=main
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.label }}
+
+
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    needs:
+      - build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          submodules: true
+
+      - name: Get Changelog entry
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2.0.0
+        with:
+          version: ${{ needs.build.outputs.version }}
+          path: ./CHANGELOG.md
+
+      - name: Release to GitHub
+        uses: ncipollo/release-action@v1.8.10
+        with:
+          name: Release v${{ steps.changelog.outputs.version }}
+          body: ${{ steps.changelog.outputs.changes }}
+          prerelease: ${{ steps.changelog.outputs.status == 'prereleased' }}
+          draft: ${{ steps.changelog.outputs.status == 'unreleased' }}
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
