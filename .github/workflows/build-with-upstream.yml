@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v2.4.0
         with:
           submodules: true
-          with-depth: 0
+          fetch-depth: 0
 
       - name: Get upstream commit
         id: upstream
