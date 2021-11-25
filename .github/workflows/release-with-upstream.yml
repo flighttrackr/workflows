@@ -71,7 +71,10 @@ jobs:
 
       - name: Get upstream commit
         id: upstream
-        run: echo "::set-output name=commit::$(git rev-parse HEAD:upstream)"
+        run: |
+          echo "::set-output name=remote::$(git -C ./upstream/ remote get-url origin)"
+          echo "::set-output name=branch::$(git -C ./upstream/ rev-parse --abbrev-ref HEAD)"
+          echo "::set-output name=commit::$(git -C ./upstream/ rev-parse HEAD)"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
@@ -103,7 +106,10 @@ jobs:
           platforms: ${{ env.ARCHS }}
           pull: true
           push: true
-          build-args: UPSTREAM_COMMIT=${{ steps.upstream.outputs.commit }}
+          build-args: |
+            UPSTREAM_REMOTE=${{ steps.upstream.outputs.remote }}
+            UPSTREAM_BRANCH=${{ steps.upstream.outputs.branch }}
+            UPSTREAM_COMMIT=${{ steps.upstream.outputs.commit }}
           cache-from: type=gha,scope=main
           cache-to: type=gha,scope=main
           tags: ${{ steps.meta.outputs.tags }}
