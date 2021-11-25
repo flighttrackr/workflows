@@ -56,7 +56,6 @@ jobs:
         uses: actions/checkout@v2.4.0
         with:
           submodules: true
-          fetch-depth: 0
 
       - name: Set release settings
         id: settings
@@ -73,8 +72,8 @@ jobs:
       - name: Get upstream commit
         id: upstream
         run: |
-          echo "::set-output name=remote::$(git -C ./upstream/ remote get-url origin)"
-          echo "::set-output name=branch::$(git -C ./upstream/ rev-parse --abbrev-ref HEAD)"
+          echo "::set-output name=remote::$(git config -f .gitmodules submodule.upstream.url)"
+          echo "::set-output name=branch::$(git config -f .gitmodules submodule.upstream.branch)"
           echo "::set-output name=commit::$(git -C ./upstream/ rev-parse HEAD)"
 
       - name: Set up QEMU
