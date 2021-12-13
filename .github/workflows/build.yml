@@ -63,7 +63,7 @@ jobs:
 
       - name: Set up Docker metadata
         id: meta
-        uses: docker/metadata-action@v3.6.1
+        uses: docker/metadata-action@v3.6.2
         with:
           images: ghcr.io/${{ env.HUB_REPO }}/${{ env.HUB_IMAGE }}
           tags: type=sha,format=long
