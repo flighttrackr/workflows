@@ -70,7 +70,7 @@ jobs:
           labels: ${{ env.IMAGE_LABELS }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@v3.1.1
+        uses: docker/build-push-action@v3.2.0
         with:
           platforms: ${{ env.ARCHS }}
           pull: true
