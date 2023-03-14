@@ -104,6 +104,7 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           platforms: ${{ env.ARCHS }}
+          context: .
           pull: true
           push: true
           build-args: |
