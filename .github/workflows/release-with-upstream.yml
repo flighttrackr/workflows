@@ -62,19 +62,19 @@ jobs:
         run: >
           if [[ $GITHUB_REF == refs/tags/v* ]];
           then
-            echo "::set-output name=version::${GITHUB_REF#refs/tags/v}"
-            echo "::set-output name=tags::type=semver,pattern={{raw}}"
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "tags=type=semver,pattern={{raw}}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=version::${GITHUB_REF#refs/heads/}"
-            echo "::set-output name=tags::type=edge"
+            echo "version=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+            echo "tags=type=edge" >> $GITHUB_OUTPUT
           fi
 
       - name: Get upstream commit
         id: upstream
         run: |
-          echo "::set-output name=remote::$(git config -f .gitmodules submodule.upstream.url)"
-          echo "::set-output name=branch::$(git config -f .gitmodules submodule.upstream.branch)"
-          echo "::set-output name=commit::$(git -C ./upstream/ rev-parse HEAD)"
+          echo "remote=$(git config -f .gitmodules submodule.upstream.url)" >> $GITHUB_OUTPUT
+          echo "branch=$(git config -f .gitmodules submodule.upstream.branch)" >> $GITHUB_OUTPUT
+          echo "commit=$(git -C ./upstream/ rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.2.0

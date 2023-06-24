@@ -58,9 +58,9 @@ jobs:
       - name: Get upstream commit
         id: upstream
         run: |
-          echo "::set-output name=remote::$(git config -f .gitmodules submodule.upstream.url)"
-          echo "::set-output name=branch::$(git config -f .gitmodules submodule.upstream.branch)"
-          echo "::set-output name=commit::$(git -C ./upstream/ rev-parse HEAD)"
+          echo "remote=$(git config -f .gitmodules submodule.upstream.url)" >> $GITHUB_OUTPUT
+          echo "branch=$(git config -f .gitmodules submodule.upstream.branch)" >> $GITHUB_OUTPUT
+          echo "commit=$(git -C ./upstream/ rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.2.0
