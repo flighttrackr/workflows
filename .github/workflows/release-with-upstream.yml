@@ -77,7 +77,7 @@ jobs:
           echo "commit=$(git -C ./upstream/ rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.2.0
+        uses: docker/setup-qemu-action@v3.0.0
         with:
           platforms: ${{ env.ARCHS }}
 
