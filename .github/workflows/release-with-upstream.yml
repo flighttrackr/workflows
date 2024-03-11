@@ -132,7 +132,7 @@ jobs:
 
       - name: Get Changelog entry
         id: changelog
-        uses: mindsers/changelog-reader-action@v2.2.2
+        uses: mindsers/changelog-reader-action@v2.2.3
         with:
           version: ${{ needs.build.outputs.version }}
           path: ./CHANGELOG.md
